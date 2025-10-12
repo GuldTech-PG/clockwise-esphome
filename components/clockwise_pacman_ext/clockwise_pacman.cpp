@@ -1,14 +1,14 @@
-#include "clockwise_mario.h"
+#include "clockwise_pacman.h"
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
 #include "CWDateTime.h"
 #include "Locator.h"
 
-namespace clockwise_mario_ext {
+namespace clockwise_pacman_ext {
 
 static ::CWDateTime g_dt;   // implemented by shim (CWDateTime.cpp)
 
-void MarioClock::setup() {
+void PacmanClock::setup() {
   HUB75_I2S_CFG cfg(w_, h_, 1);
   cfg.gpio.r1=r1_; cfg.gpio.g1=g1_; cfg.gpio.b1=b1_;
   cfg.gpio.r2=r2_; cfg.gpio.g2=g2_; cfg.gpio.b2=b2_;
@@ -33,8 +33,8 @@ void MarioClock::setup() {
   clockface_->setup(&g_dt);
 }
 
-void MarioClock::update() {
+void PacmanClock::update() {
   if (clockface_) clockface_->update(); // just like Clockwise's loop
 }
 
-} // namespace clockwise_mario_ext
+} // namespace

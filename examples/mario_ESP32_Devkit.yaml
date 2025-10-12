@@ -1,13 +1,12 @@
 esphome:
-  name: clockwise
-  friendly_name: Clockwise Mario
+  name: clockwise_pacman
+  friendly_name: Clockwise Pacman
 
   platformio_options:
     lib_deps:
       - Networking
       - WiFi
       - EEPROM
-            
       - ropg/ezTime
       - adafruit/Adafruit BusIO 
       - adafruit/Adafruit GFX Library  
@@ -16,13 +15,17 @@ esphome:
       - -I$PROJECT_PACKAGES_DIR/framework-arduinoespressif32/libraries/Network/src
       - -I$PROJECT_PACKAGES_DIR/framework-arduinoespressif32/libraries/WiFi/src
       - -I$PROJECT_PACKAGES_DIR/framework-arduinoespressif32/libraries/EEPROM/src
-    # Optional but recommended: clean dependency mode
     lib_ldf_mode: chain+      
 
-# Pull the glue component from your GitHub repo (Option B)
 external_components:
   - source: github://aschoelzhorn/clockwise-esphome@main
-    #refresh: 1s only for debug
+    #refresh: 1s  # just for debugging
+
+esp32:
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: arduino
 
 # Enable logging
 logger:
@@ -39,29 +42,26 @@ ota:
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password  
-  ap:
-    ssid: "CW Mario Fallback"
-    password: "12345678"
 
-# Time provider (the face reads time via a shim from this SNTP clock)
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Clockwise Clock"
+    password: !secret wifi_ap_password
+
 time:
   - platform: sntp
     id: sntp_time
 
-# Instantiate the Mario face (our external component)
-# This internally does:
-#   clockface = new Clockface(dma_display);
-#   clockface->setup(&CWDateTimeShim); // ESPHome time
-#   clockface->update();
-clockwise_mario_ext:
-  id: marioclk
+clockwise_pacman_ext:
+  id: pacmanclk
   width: 64
   height: 64
   brightness: 180
   time_id: sntp_time
   driver: FM6126A
-  clock_phase: false       # flip to false if you see a 1-column shift
-  pins:                    # Huidu HD-WF2 (X1) → HUB75E (64x64)
+  clock_phase: false
+  i2c_speed: 20M
+  pins:
     r1: 2
     g1: 6
     b1: 10

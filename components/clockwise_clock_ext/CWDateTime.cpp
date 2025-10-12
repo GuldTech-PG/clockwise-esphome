@@ -1,4 +1,5 @@
 #include "CWDateTime.h"
+
 #include "esphome/core/application.h"
 #include "esphome/components/time/real_time_clock.h"
 #include "esphome/core/log.h"
@@ -8,7 +9,14 @@ using namespace esphome::time;
 
 static const char *const TAG = "CWDateTime";
 
-void CWDateTime::set_rtc(esphome::time::RealTimeClock *rtc) {
+void CWDateTime::begin(esphome::time::RealTimeClock *rtc) {
+
+#ifdef ESPHOME_VERSION
+ESP_LOGI(TAG, "ESPHOME_VERSION defined");  
+#else
+ESP_LOGI(TAG, "NO ESPHOME_VERSION");
+#endif 
+  
   rtc_ = rtc;
   if (rtc_)
     ESP_LOGI(TAG, "RTC successfully linked!");
@@ -16,24 +24,10 @@ void CWDateTime::set_rtc(esphome::time::RealTimeClock *rtc) {
     ESP_LOGW(TAG, "RTC pointer cleared or invalid!");
 }
 
-
-void CWDateTime::begin() {
-  ESP_LOGI(TAG, "CWDateTime initialized. Waiting for RTC to be assigned via YAML.");
-}
-
-void CWDateTime::begin(const char *timeZone, bool use24format, const char *ntpServer, const char *posixTZ) {
-  (void)timeZone;
-  (void)ntpServer;
-  (void)posixTZ;
-  use24hFormat_ = use24format;
-}
-
 String CWDateTime::getFormattedTime() {
   if (!rtc_) return "00:00:00";
-
   esphome::ESPTime t = rtc_->now();
   if (!t.is_valid()) return "00:00:00";
-
   char buf[16];
   snprintf(buf, sizeof(buf), "%02d:%02d:%02d", t.hour, t.minute, t.second);
   return String(buf);
@@ -62,6 +56,10 @@ int CWDateTime::getSecond() {
   return t.is_valid() ? t.second : 0;
 }
 
+long CWDateTime::getMilliseconds() {
+  return 0;
+}
+
 int CWDateTime::getDay() {
   if (!rtc_) return 1;
   esphome::ESPTime t = rtc_->now();
@@ -87,11 +85,6 @@ int CWDateTime::getWeekday() {
   int h = (q + 13*(m+1)/5 + K + K/4 + J/4 + 5*J) % 7;
   int d = ((h + 5) % 7) + 1;
   return d;
-}
-
-long CWDateTime::getMilliseconds() 
-{
-  return 0;
 }
 
 char *CWDateTime::getHour(const char *format) {
@@ -135,20 +128,5 @@ bool CWDateTime::isAM() {
 bool CWDateTime::is24hFormat() {
   return use24hFormat_;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
