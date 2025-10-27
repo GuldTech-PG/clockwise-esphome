@@ -1,0 +1,155 @@
+# Clockwise HUB75 Clock - ESP32-S3 Configuration
+# Optimized for ESP32-S3 with GDMA support
+
+substitutions:
+  device_name: clockwise-hub75-s3
+  friendly_name: Clockwise S3 Clock
+  
+  # Display settings for 64×64 panel
+  panel_width: "64"
+  panel_height: "64"
+  initial_brightness: "128"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  comment: "Clockwise Clock with HUB75 on ESP32-S3"
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+    version: recommended
+    sdkconfig_options:
+      CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240: "y"
+
+# Enable logging
+logger:
+  level: INFO
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+# Enable OTA updates
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# WiFi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "${device_name} Fallback"
+    password: !secret fallback_password
+
+captive_portal:
+
+# Time component
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: America/New_York
+
+# External components
+external_components:
+  - source: github://stuartparmenter/hub75-esphome
+    components: [hub75]
+    refresh: 1d
+  - source: github://aschoelzhorn/clockwise-esphome@feature/use_hub75_component
+    components: [clockwise_hub75]
+    refresh: 1h
+
+# HUB75 Display for ESP32-S3 (64×64 panel)
+display:
+  - platform: hub75
+    id: matrix_display
+    
+    # 64×64 panel configuration
+    panel_width: ${panel_width}
+    panel_height: ${panel_height}
+    
+    # Display settings
+    brightness: ${initial_brightness}
+    bit_depth: 8
+    min_refresh_rate: 120  # S3 can handle higher refresh rates
+    double_buffer: false
+    
+    # Hardware configuration for 64px high panel
+    shift_driver: GENERIC  # Try FM6126A if your panel supports it
+    scan_wiring: STANDARD_TWO_SCAN  # 1/32 scan for 64px high
+    
+    # ESP32-S3 Pin configuration
+    # Using non-strapping pins for stable operation
+    r1_pin: GPIO2
+    g1_pin: GPIO3
+    b1_pin: GPIO4
+    r2_pin: GPIO5
+    g2_pin: GPIO6
+    b2_pin: GPIO7
+    a_pin: GPIO8
+    b_pin: GPIO9
+    c_pin: GPIO10
+    d_pin: GPIO11
+    e_pin: GPIO12  # Required for 64px high panels
+    lat_pin: GPIO13
+    oe_pin: GPIO14
+    clk_pin: GPIO15
+    
+    clock_speed: 20MHZ
+    update_interval: never
+
+# Clockwise Integration Component
+clockwise_hub75:
+  id: clockwise_main
+  hub75_id: matrix_display
+  clockface_type: PACMAN
+  initial_brightness: ${initial_brightness}
+
+# Home Assistant Entities
+number:
+  - platform: clockwise_hub75
+    clockwise_hub75_id: clockwise_main
+    name: "Display Brightness"
+    icon: mdi:brightness-5
+    entity_category: config
+    mode: slider
+
+switch:
+  - platform: clockwise_hub75
+    clockwise_hub75_id: clockwise_main
+    name: "Display Power"
+    icon: mdi:power
+    entity_category: config
+    restore_mode: RESTORE_DEFAULT_ON
+
+select:
+  - platform: clockwise_hub75
+    clockwise_hub75_id: clockwise_main
+    name: "Clockface"
+    icon: mdi:clock-outline
+    entity_category: config
+
+# Status indicators
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+    entity_category: diagnostic
+
+  - platform: internal_temperature
+    name: "ESP32-S3 Temperature"
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      entity_category: diagnostic
+
+button:
+  - platform: restart
+    name: "Restart"
+    entity_category: diagnostic

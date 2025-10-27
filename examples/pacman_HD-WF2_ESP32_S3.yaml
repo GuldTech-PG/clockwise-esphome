@@ -60,18 +60,5 @@ clockwise_pacman_ext:
   driver: FM6126A
   clock_phase: false
   i2c_speed: 20M
-  pins:
-    r1: 2
-    g1: 6
-    b1: 10
-    r2: 3
-    g2: 7
-    b2: 11
-    a: 39
-    b: 38
-    c: 37
-    d: 36
-    e: 21
-    lat: 33
-    oe: 35
-    clk: 34
+  # Use upstream board preset for HD-WF2 (commit 334dc0e) to avoid manual pins
+  board: huidu-hd-wf2
