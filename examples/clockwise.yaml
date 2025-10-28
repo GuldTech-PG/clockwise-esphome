@@ -1,0 +1,197 @@
+# Clockwise HUB75 Clock - HD-WF2 Board Configuration
+# ESP32-S3 (8MB Flash, No PSRAM) with 64×64 FM6126A Panel
+
+substitutions:
+  device_name: clockwise-hdwf2
+  friendly_name: Clockwise HD-WF2 Clock
+  
+  # HD-WF2 Board with 64×64 FM6126A panel
+  panel_width: "64"
+  panel_height: "64"
+  initial_brightness: "128"
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  comment: "Clockwise Clock on HD-WF2 Board with FM6126A Driver"
+  platformio_options:
+    lib_deps:
+      - adafruit/Adafruit BusIO
+      - adafruit/Adafruit GFX Library  # Required for Clockface compatibility
+    lib_ldf_mode: chain+
+    build_flags:
+      - -Os  # Optimize for size
+      - -DCORE_DEBUG_LEVEL=1  # Reduce debug level    
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  framework:
+    type: arduino
+    version: recommended
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption_key
+  reboot_timeout: 0s
+
+# Enable OTA updates
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# WiFi configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  
+  # Enable fallback hotspot
+  ap:
+    ssid: "${device_name} Fallback"
+    password: !secret wifi_ap_password
+
+captive_portal:
+
+# Web server (optional - disable for production to save memory)
+#web_server:
+#  port: 80
+#  local: true
+
+# Time component for clock functionality
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Vienna  # Change to your timezone
+    on_time_sync:
+      then:
+        - logger.log: "Time synchronized with Home Assistant"
+
+# External components
+external_components:
+  # HUB75 upstream component
+  - source: github://stuartparmenter/hub75-esphome
+  
+  # Clockwise HUB75 integration component
+  - source: github://aschoelzhorn/clockwise-esphome@main
+    components: [clockwise_hub75]
+
+# HUB75 Matrix Display Configuration for HD-WF2 Board
+display:
+  - platform: hub75
+    id: matrix_display
+    # Use board preset for automatic pin mapping
+    board: huidu-hd-wf2
+
+    # Panel dimensions - 64×64 FM6126A panel
+    panel_width: ${panel_width}
+    panel_height: ${panel_height}
+    
+    # Display settings
+    brightness: ${initial_brightness}
+    bit_depth: 8
+    min_refresh_rate: 120  # ESP32-S3 can handle high refresh rates
+    double_buffer: false
+    
+    # Hardware configuration - FM6126A driver chip
+    shift_driver: FM6126A
+    scan_wiring: STANDARD_TWO_SCAN  # 1/32 scan for 64px high
+
+    # Timing configuration
+    clock_speed: 20MHZ
+    clock_phase: false
+    
+    # Disable display updates - clockwise component handles rendering
+    # Note: Upstream changed update_interval to integer (ms), never = 4294967295
+    update_interval: 4294967295ms
+
+# Clockwise Integration Component
+clockwise_hub75:
+  id: clockwise_main
+  hub75_id: matrix_display
+  time_id: homeassistant_time  # Link to time component for clock display  
+  clockface_type: MARIO
+  initial_brightness: ${initial_brightness}
+
+# Home Assistant Entities
+
+# Brightness Control (0-255)
+number:
+  - platform: clockwise_hub75
+    clockwise_hub75_id: clockwise_main
+    id: display_brightness
+    name: "Display Brightness"
+    icon: mdi:brightness-5
+    entity_category: config
+    mode: slider
+
+# Power Control
+switch:
+  - platform: clockwise_hub75
+    clockwise_hub75_id: clockwise_main
+    id: display_power
+    name: "Display Power"
+    icon: mdi:power
+    entity_category: config
+    restore_mode: RESTORE_DEFAULT_ON
+
+# Clockface Selection
+select:
+  - platform: clockwise_hub75
+    clockwise_hub75_id: clockwise_main
+    id: clockface_selector
+    name: "Clockface"
+    icon: mdi:clock-outline
+    entity_category: config
+
+# Status indicators
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+    entity_category: diagnostic
+  
+  - platform: uptime
+    name: "Uptime"
+    update_interval: 60s
+    entity_category: diagnostic
+  
+  # ESP32-S3 internal temperature
+  - platform: internal_temperature
+    name: "ESP32-S3 Temperature"
+    update_interval: 60s
+    entity_category: diagnostic
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+      entity_category: diagnostic
+    ssid:
+      name: "Connected SSID"
+      entity_category: diagnostic
+    mac_address:
+      name: "Mac Address"
+      entity_category: diagnostic
+    bssid:
+      name: "Connected BSSID"
+      entity_category: diagnostic
+
+  - platform: version
+    name: "ESPHome Version"
+    entity_category: diagnostic
+
+# Control buttons
+button:
+  - platform: restart
+    name: "Restart"
+    entity_category: diagnostic
+
+  - platform: safe_mode
+    name: "Safe Mode Boot"
+    entity_category: diagnostic
+    disabled_by_default: true
+

@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
 
-#include "hour_font.h"
+#include "pacman_hour_font.h"
 #include "picopixel.h"
 #include "Tile.h"
 #include "Locator.h"
@@ -17,6 +17,7 @@
 #include "pacman.h"
 
 
+namespace pacman {
 class Clockface: public IClockface {
   private:
     const int MAP_SIZE = 12;
@@ -29,6 +30,12 @@ class Clockface: public IClockface {
     const char* _monthWords = "JAN\0FEB\0MAR\0APR\0MAY\0JUN\0JUL\0AUG\0SEP\0OCT\0NOV\0DEC\0";
     char weekDayTemp[4]= "\0";
     char monthTemp[4]= "\0";
+
+    // Timing and sprite state
+    unsigned long lastMillis = 0;
+    unsigned long lastMillisTime = 0;
+    unsigned long lastMillisSec = 0;
+    Pacman* pacman = nullptr;
 
 
 
@@ -100,6 +107,8 @@ class Clockface: public IClockface {
     
   public:
     Clockface(Adafruit_GFX* display);
+    ~Clockface();
     void setup(CWDateTime *dateTime);
     void update();
 };
+}  // namespace pacman

@@ -2,7 +2,8 @@
 #include "esphome/core/log.h"
 #include "Locator.h"
 #include "GFXWrapper.h"
-#include "Clockface.h"  // For Pacman face (default)
+#include "pacman_Clockface.h"  // Pacman clockface implementation
+#include "mario_Clockface.h"  // For Mario face
 
 namespace esphome {
 namespace clockwise_hub75 {
@@ -38,13 +39,14 @@ void ClockwiseHUB75::setup() {
   // Create clockface based on type
   switch (clockface_type_) {
     case PACMAN:
-      clockface_ = new Clockface(gfx_wrapper_);  // Clockface implements IClockface
+      clockface_ = new pacman::Clockface(gfx_wrapper_);  // Pacman Clockface implements IClockface
       clockface_->setup(&g_dt);
       ESP_LOGCONFIG(TAG, "Pacman clockface initialized");
       break;
     case MARIO:
-      // TODO: Replace with MarioClockface (must implement IClockface)
-      ESP_LOGW(TAG, "Mario clockface not yet implemented");
+      clockface_ = new mario::Clockface(gfx_wrapper_);  // Mario Clockface implements IClockface
+      clockface_->setup(&g_dt);
+      ESP_LOGCONFIG(TAG, "Mario clockface initialized");
       break;
     case CLOCK:
       // TODO: Replace with BasicClockface (must implement IClockface)
@@ -84,10 +86,43 @@ void ClockwiseHUB75::set_power(bool state) {
 }
 
 void ClockwiseHUB75::switch_clockface(ClockfaceType type) {
+  if (type == clockface_type_) {
+    ESP_LOGD(TAG, "Already using clockface type %d, skipping switch", static_cast<int>(type));
+    return;
+  }
+  
+  ESP_LOGI(TAG, "Switching clockface from %d to %d", static_cast<int>(clockface_type_), static_cast<int>(type));
+  
+  // Destroy the old clockface
+  if (clockface_ != nullptr) {
+    delete clockface_;
+    clockface_ = nullptr;
+  }
+  
+  // Clear the display
+  if (hub75_display_ != nullptr) {
+    hub75_display_->fill(Color(0, 0, 0));
+  }
+  
+  // Update the clockface type
   clockface_type_ = type;
-  ESP_LOGD(TAG, "Clockface switched to %d", static_cast<int>(type));
-  // TODO: Implement dynamic clockface switching
-  // This would require destroying old clockface and creating new one
+  
+  // Create the new clockface based on type
+  switch (clockface_type_) {
+    case PACMAN:
+      clockface_ = new pacman::Clockface(gfx_wrapper_);
+      clockface_->setup(&g_dt);
+      ESP_LOGCONFIG(TAG, "Switched to Pacman clockface");
+      break;
+    case MARIO:
+      clockface_ = new mario::Clockface(gfx_wrapper_);
+      clockface_->setup(&g_dt);
+      ESP_LOGCONFIG(TAG, "Switched to Mario clockface");
+      break;
+    case CLOCK:
+      ESP_LOGW(TAG, "Basic clock clockface not yet implemented, staying black");
+      break;
+  }
 }
 
 void ClockwiseHUB75::update_display_() {

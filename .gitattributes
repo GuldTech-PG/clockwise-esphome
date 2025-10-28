@@ -1,0 +1,15 @@
+# Normalize all text
+* text=auto
+
+# Source files must use LF
+*.h     text eol=lf
+*.hpp   text eol=lf
+*.c     text eol=lf
+*.cpp   text eol=lf
+*.cc    text eol=lf
+*.ino   text eol=lf
+*.py    text eol=lf
+
+# Fonts / binary assets keep exact bytes
+*.bin   binary
+*.png   binary

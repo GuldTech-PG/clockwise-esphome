@@ -1,16 +1,16 @@
-#include "Clockface.h"
+#include "pacman_Clockface.h"
 
-
-unsigned long lastMillis = 0;
-unsigned long lastMillisTime = 0;
-unsigned long lastMillisSec = 0;
-
-
-Pacman *pacman;
-
+namespace pacman {
 Clockface::Clockface(Adafruit_GFX* display) {
   _display = display;
   Locator::provide(display);
+}
+
+Clockface::~Clockface() {
+  if (pacman != nullptr) {
+    delete pacman;
+    pacman = nullptr;
+  }
 }
 
 void Clockface::setup(CWDateTime *dateTime) {
@@ -263,3 +263,5 @@ void Clockface::drawMap()
 
   
 }
+
+} // namespace pacman
