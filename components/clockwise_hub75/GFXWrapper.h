@@ -6,7 +6,7 @@
 // Adapter to make HUB75Display compatible with Adafruit_GFX-based code
 class GFXWrapper : public Adafruit_GFX {
  public:
-  GFXWrapper(esphome::hub75_display::HUB75Display *display)
+  GFXWrapper(esphome::hub75::HUB75Display *display)
       : Adafruit_GFX(display->get_width(), display->get_height()), display_(display) {}
 
   void drawPixel(int16_t x, int16_t y, uint16_t color) override {
@@ -28,5 +28,5 @@ class GFXWrapper : public Adafruit_GFX {
   }
 
  private:
-  esphome::hub75_display::HUB75Display *display_;
+  esphome::hub75::HUB75Display *display_;
 };

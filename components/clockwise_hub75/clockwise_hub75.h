@@ -27,7 +27,7 @@ class ClockwiseHUB75 : public PollingComponent {
   float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
 
   // Configuration
-  void set_hub75_display(hub75_display::HUB75Display *display) { hub75_display_ = display; }
+  void set_hub75_display(esphome::hub75::HUB75Display *display) { hub75_display_ = display; }
   void set_time(time::RealTimeClock *time) { time_ = time; }
   void set_clockface_type(ClockfaceType type) { clockface_type_ = type; }
   void set_initial_brightness(uint8_t brightness) { initial_brightness_ = brightness; }
@@ -43,7 +43,7 @@ class ClockwiseHUB75 : public PollingComponent {
   ClockfaceType get_clockface_type() const { return clockface_type_; }
 
  protected:
-  hub75_display::HUB75Display *hub75_display_{nullptr};
+  esphome::hub75::HUB75Display *hub75_display_{nullptr};
   time::RealTimeClock *time_{nullptr};
   IClockface *clockface_{nullptr};
   GFXWrapper *gfx_wrapper_{nullptr};

@@ -11,8 +11,9 @@ from esphome.components import time
 CODEOWNERS = ["@clockwise"]
 
 clockwise_hub75_ns = cg.esphome_ns.namespace("clockwise_hub75")
-hub75_ns = cg.esphome_ns.namespace("hub75_display")
-HUB75Display = hub75_ns.class_("HUB75Display", cg.PollingComponent)  # matches upstream declaration
+# Use MockObj to match hub75 component's fully-qualified namespace
+hub75_ns = cg.MockObj("::esphome::hub75", "::")
+HUB75Display = hub75_ns.class_("HUB75Display")
 ClockwiseHUB75 = clockwise_hub75_ns.class_("ClockwiseHUB75", cg.PollingComponent)
 
 # Declare the C++ enum
