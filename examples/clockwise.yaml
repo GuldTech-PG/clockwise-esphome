@@ -9,6 +9,11 @@ substitutions:
   panel_width: "64"
   panel_height: "64"
   initial_brightness: "128"
+  
+  # LDR Configuration (optional - set enable_ldr: "true" to enable)
+  enable_ldr: "false"  # Set to "true" to enable auto-brightness
+  ldr_pin: GPIO4  # Light sensor pin (only used if enable_ldr is true)
+  ldr_update_interval: "2s"  # How often to check light levels
 
 esphome:
   name: ${device_name}
@@ -149,6 +154,61 @@ select:
 
 # Status indicators
 sensor:
+  # Raw voltage sensor for LDR calibration (debug only)
+  # - platform: adc
+  #   pin: ${ldr_pin}
+  #   name: "LDR Raw Voltage"
+  #   id: ldr_raw_voltage
+  #   update_interval: ${ldr_update_interval}
+  #   attenuation: 12db
+  #   accuracy_decimals: 2
+  #   unit_of_measurement: "V"
+  #   entity_category: diagnostic
+
+  # Light sensor (LDR) for automatic brightness control
+  # To disable: Set enable_ldr: "false" in substitutions
+  - platform: adc
+    pin: ${ldr_pin}
+    name: "Ambient Light"
+    id: ambient_light
+    update_interval: ${ldr_update_interval}
+    attenuation: 12db  # For 0-3.3V range
+    filters:
+      # Smooth readings to avoid flickering
+      - sliding_window_moving_average:
+          window_size: 5
+          send_every: 1
+      # Calibrate based on YOUR actual lighting conditions
+      # Measured values: Dark=1.27V, Bright=3.13V
+      - calibrate_linear:
+          - 1.3 -> 0.0    # Dark (covered) voltage -> 0%
+          - 3.0 -> 100.0  # Bright (full light) voltage -> 100%
+      - lambda: return min(100.0f, max(0.0f, x));  # Clamp to 0-100%
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+    on_value:
+      # Only run auto-brightness when LDR is enabled
+      if:
+        condition:
+          lambda: return ("${enable_ldr}" == std::string("true"));
+        then:
+          # Automatic brightness adjustment based on ambient light
+          # Maps light percentage (0-100%) to brightness (20-255)
+          - lambda: |-
+              // Map ambient light (0-100%) to brightness (20-255)
+              // Minimum brightness: 20 (always visible)
+              // Maximum brightness: 255 (full brightness)
+              int min_brightness = 20;
+              int max_brightness = 255;
+              int brightness = min_brightness + (x / 100.0) * (max_brightness - min_brightness);
+              
+              // Apply brightness to display
+              id(clockwise_main).set_brightness(brightness);
+              
+              // Update the number entity so it shows in UI
+              id(display_brightness).publish_state(brightness);
+
   - platform: wifi_signal
     name: "WiFi Signal"
     update_interval: 60s
