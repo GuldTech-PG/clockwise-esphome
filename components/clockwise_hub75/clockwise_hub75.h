@@ -31,6 +31,7 @@ class ClockwiseHUB75 : public PollingComponent {
   void set_time(time::RealTimeClock *time) { time_ = time; }
   void set_clockface_type(ClockfaceType type) { clockface_type_ = type; }
   void set_initial_brightness(uint8_t brightness) { initial_brightness_ = brightness; }
+  void set_rotation(uint8_t rotation) { rotation_ = rotation; }
 
   // Control methods for Home Assistant
   void set_brightness(uint8_t brightness);
@@ -47,6 +48,7 @@ class ClockwiseHUB75 : public PollingComponent {
   time::RealTimeClock *time_{nullptr};
   IClockface *clockface_{nullptr};
   GFXWrapper *gfx_wrapper_{nullptr};
+  uint8_t rotation_{0};
   
   ClockfaceType clockface_type_{PACMAN};
   uint8_t initial_brightness_{128};
