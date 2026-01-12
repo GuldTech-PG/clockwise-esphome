@@ -9,6 +9,7 @@ from esphome.components import time
 # No explicit DEPENDENCIES needed - the hub75_id schema reference ensures ordering.
 # We pass HUB75Display pointer directly via codegen (no dynamic_cast/RTTI required).
 CODEOWNERS = ["@clockwise"]
+CONF_ROTATION = "rotation"
 
 clockwise_hub75_ns = cg.esphome_ns.namespace("clockwise_hub75")
 # Use MockObj to match hub75 component's fully-qualified namespace
