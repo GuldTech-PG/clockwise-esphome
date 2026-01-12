@@ -39,6 +39,7 @@ CONFIG_SCHEMA = cv.Schema({
     cv.Optional(CONF_TIME_ID): cv.use_id(time.RealTimeClock),
     cv.Optional(CONF_CLOCKFACE_TYPE, default="PACMAN"): cv.enum(CLOCKFACE_TYPES, upper=True),
     cv.Optional(CONF_INITIAL_BRIGHTNESS, default=128): cv.int_range(min=0, max=255),
+    cv.Optional(CONF_ROTATION, default=0): cv.int_range(min=0, max=3),
 }).extend(cv.polling_component_schema("16ms"))
 
 
@@ -54,6 +55,9 @@ async def to_code(config):
     if CONF_TIME_ID in config:
         time_var = await cg.get_variable(config[CONF_TIME_ID])
         cg.add(var.set_time(time_var))
+
+    if CONF_ROTATION in config:
+        cg.add(var.set_rotation(config[CONF_ROTATION]))
     
     # Configure initial settings
     cg.add(var.set_clockface_type(config[CONF_CLOCKFACE_TYPE]))
