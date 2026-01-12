@@ -26,6 +26,12 @@ void ClockwiseHUB75::setup() {
   
   // Create Adafruit_GFX wrapper around HUB75Display
   gfx_wrapper_ = new GFXWrapper(hub75_display_);
+
+  // Apply rotation if set
+  if (rotation_ > 0) {
+    gfx_wrapper_->setRotation(rotation_);
+    ESP_LOGCONFIG(TAG, "Display rotation set to: %d", rotation_);
+  }
   
   // Provide the wrapper to the Clockface engine via Locator
   Locator::provide(gfx_wrapper_);
